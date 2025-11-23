@@ -1,0 +1,94 @@
+version: '3.8'
+
+services:
+  # ==========================================
+  # Agents Backend API Service
+  # ==========================================
+  agents-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: agents-backend
+    image: agents-backend:latest
+
+    # Port mapping
+    ports:
+      - "8080:8080"
+
+    # Environment variables
+    # Override these in a .env file
+    environment:
+      - ENVIRONMENT=${ENVIRONMENT:-development}
+      - HOST=0.0.0.0
+      - PORT=8080
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost:3000,http://localhost:8000}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - MAX_REQUEST_SIZE=${MAX_REQUEST_SIZE:-10485760}
+      - REQUEST_TIMEOUT=${REQUEST_TIMEOUT:-300}
+      - LLM_TIMEOUT=${LLM_TIMEOUT:-120}
+      - MAX_QUERY_LENGTH=${MAX_QUERY_LENGTH:-10000}
+      - MIN_QUERY_LENGTH=${MIN_QUERY_LENGTH:-1}
+
+    # Load environment variables from .env file
+    env_file:
+      - .env
+
+    # Health check
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+    # Restart policy
+    restart: unless-stopped
+
+    # Resource limits (optional, adjust as needed)
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+        reservations:
+          cpus: '1'
+          memory: 1G
+
+    # Networks
+    networks:
+      - agents-network
+
+  # ==========================================
+  # Redis Cache Service (Optional)
+  # ==========================================
+  # Uncomment this section if you want to add Redis for caching
+  # redis:
+  #   image: redis:7-alpine
+  #   container_name: agents-redis
+  #   ports:
+  #     - "6379:6379"
+  #   volumes:
+  #     - redis-data:/data
+  #   healthcheck:
+  #     test: ["CMD", "redis-cli", "ping"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 5
+  #   restart: unless-stopped
+  #   networks:
+  #     - agents-network
+
+# ==========================================
+# Networks
+# ==========================================
+networks:
+  agents-network:
+    driver: bridge
+
+# ==========================================
+# Volumes (for Redis)
+# ==========================================
+# volumes:
+#   redis-data:
+#     driver: local

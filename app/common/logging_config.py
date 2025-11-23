@@ -4,21 +4,16 @@ Central logging configuration module for the application.
 This module provides:
 - Console-only logging output
 - Human-readable log format with timestamps
-- Environment-based log level configuration
+- Configurable log level via environment variables
 - Helper function to get configured loggers
 """
 
 import logging
-import os
-
+from typing import Optional
 
 # Log format
 LOG_FORMAT = "%(asctime)s | %(levelname)-8s | %(name)s | %(message)s"
 DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
-
-# Environment-based log level
-ENV = os.getenv("ENVIRONMENT", "development").lower()
-LOG_LEVEL = logging.DEBUG if ENV == "development" else logging.INFO
 
 # Track if logging has been initialized
 _initialized = False
@@ -33,30 +28,40 @@ class AppOnlyFilter(logging.Filter):
 
     def filter(self, record):
         # Only show logs from 'app' or '__main__' (our application)
-        return record.name.startswith('app') or record.name == '__main__'
+        return record.name.startswith("app") or record.name == "__main__"
 
 
-def setup_logging():
+def setup_logging(log_level: Optional[str] = None):
     """
     Initialize the logging system with console output only.
 
     This should be called once at application startup.
+
+    Args:
+        log_level: Logging level as string (DEBUG, INFO, WARNING, ERROR, CRITICAL).
+                   If not provided, defaults to INFO.
     """
     global _initialized
 
     if _initialized:
         return
 
+    # Parse log level
+    if log_level:
+        level = getattr(logging, log_level.upper(), logging.INFO)
+    else:
+        level = logging.INFO
+
     # Get root logger
     root_logger = logging.getLogger()
-    root_logger.setLevel(LOG_LEVEL)
+    root_logger.setLevel(level)
 
     # Remove existing handlers to avoid duplicates
     root_logger.handlers.clear()
 
-    # Create console handler - shows INFO and above
+    # Create console handler
     console_handler = logging.StreamHandler()
-    console_handler.setLevel(logging.INFO)  # Show INFO, WARNING, and ERROR in console
+    console_handler.setLevel(level)
 
     # Create formatter
     formatter = logging.Formatter(LOG_FORMAT, datefmt=DATE_FORMAT)
@@ -75,10 +80,7 @@ def setup_logging():
 
     # Log initialization
     logger = logging.getLogger(__name__)
-    logger.info(
-        f"Logging initialized - Level: {logging.getLevelName(LOG_LEVEL)}, "
-        f"Environment: {ENV}"
-    )
+    logger.info(f"Logging initialized - Level: {logging.getLevelName(level)}")
 
 
 def get_logger(name: str) -> logging.Logger:

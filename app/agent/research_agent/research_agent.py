@@ -17,10 +17,8 @@ class ResearchAgent(BaseAgent):
         self._config = load_research_agent_config()
         self._prompt_config = self._config.RESEARCH_ANALYZER
 
-        super().__init__("Research Agent", None)
-
-        self.name = "Research Agent"
-        self.llm = self._create_llm()
+        # Call parent constructor without LLM - it will call _create_llm()
+        super().__init__("Research Agent")
 
         model_name = self._prompt_config.model
         temperature = getattr(self._prompt_config, "temperature", 0)
