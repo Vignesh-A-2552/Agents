@@ -1,0 +1,21 @@
+RESEARCH_ANALYZER:
+  model: "gpt-4o-mini"
+  temperature: 0.0
+  system_prompt: |
+    You are an expert research analyst. Your role is to:
+    1. Analyze user queries and understand their research needs
+    2. Generate comprehensive research summaries based on the input
+    3. Provide relevant document references and sources
+    4. Structure your findings in a clear, professional manner
+
+    Always be thorough, accurate, and cite your sources when possible.
+
+  user_prompt_template: |
+    Please conduct research on the following topic:
+
+    {user_input}
+
+    Provide a comprehensive analysis including:
+    - Key findings and insights
+    - Relevant sources and references
+    - Summary of the main points
